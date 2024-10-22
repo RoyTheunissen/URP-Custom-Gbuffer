@@ -27,6 +27,7 @@ struct Attributes
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
+#if !defined(SURFACE_SHADER) // CUSTOM: SURFACESHADERS: We want to declare this in one central place: SurfaceShader.hlsl.
 struct Varyings
 {
     float2 uv                       : TEXCOORD0;
@@ -67,6 +68,7 @@ struct Varyings
     UNITY_VERTEX_INPUT_INSTANCE_ID
     UNITY_VERTEX_OUTPUT_STEREO
 };
+#endif // !defined(SURFACE_SHADER) // CUSTOM: SURFACESHADERS: We want to declare this in one central place: SurfaceShader.hlsl.
 
 void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
 {
@@ -239,7 +241,14 @@ void LitPassFragment(
 #endif
 
     SurfaceData surfaceData;
+    // CUSTOM: SURFACESHADERS: For surface shaders, just initialize the surface data with defaults and then call the surface function
+#if defined(SURFACE_SHADER)
+    surfaceData = (SurfaceData)0;
+    InitializeSurfaceDataForSurfaceShader(input.uv, surfaceData);
+    SurfaceFunction(input, surfaceData);
+#else
     InitializeStandardLitSurfaceData(input.uv, surfaceData);
+#endif // defined(SURFACE_SHADER)
 
 #ifdef LOD_FADE_CROSSFADE
     LODFadeCrossFade(input.positionCS);
