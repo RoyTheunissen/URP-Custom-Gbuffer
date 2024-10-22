@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.roytheunissen.urp-debug-draw-modes": {
+      "version": "file:com.roytheunissen.urp-debug-draw-modes",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.4",
       "depth": 0,

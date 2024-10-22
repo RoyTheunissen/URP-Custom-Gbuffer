@@ -1,0 +1,3 @@
+[submodule "Packages/com.roytheunissen.urp-debug-draw-modes"]
+	path = Packages/com.roytheunissen.urp-debug-draw-modes
+	url = ../URP-Debug-Draw-Modes.git
