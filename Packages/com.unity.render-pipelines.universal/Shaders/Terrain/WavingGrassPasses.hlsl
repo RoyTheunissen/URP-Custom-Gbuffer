@@ -205,6 +205,8 @@ inline void InitializeSimpleLitSurfaceData(GrassVertexOutput input, out SurfaceD
     outSurfaceData.normalTS = 0.0; // unused
     outSurfaceData.occlusion = 1.0;
     outSurfaceData.emission = 0.0;
+    
+    outSurfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 }
 
 // Used for StandardSimpleLighting shader

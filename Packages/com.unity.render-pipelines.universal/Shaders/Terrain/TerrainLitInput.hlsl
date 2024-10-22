@@ -123,6 +123,8 @@ inline void InitializeStandardLitSurfaceData(float2 uv, out SurfaceData outSurfa
     outSurfaceData.normalTS = SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap));
     outSurfaceData.occlusion = 1;
     outSurfaceData.emission = 0;
+    
+    outSurfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 }
 
 

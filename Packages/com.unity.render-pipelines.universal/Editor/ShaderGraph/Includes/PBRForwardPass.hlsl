@@ -153,6 +153,8 @@ void frag(
     #endif
 
     surface.albedo = AlphaModulate(surface.albedo, surface.alpha);
+    
+    surface.custom0 = surfaceDescription.Custom0; // CUSTOM: Pass along custom gbuffer #0. So many random unique initializations of SurfaceData. Why not call one initialize function and have it be consistent. This took me forever to find ;_; 
 
 #if defined(_DBUFFER)
     ApplyDecalToSurfaceData(unpacked.positionCS, surface, inputData);

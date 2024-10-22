@@ -86,6 +86,8 @@ inline void InitializeParticleSimpleLitSurfaceData(VaryingsParticle input, out S
 
     outSurfaceData.metallic = 0.0; // unused
     outSurfaceData.occlusion = 1.0;
+    
+    outSurfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 }
 
 ///////////////////////////////////////////////////////////////////////////////

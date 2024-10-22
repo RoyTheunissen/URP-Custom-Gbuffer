@@ -90,6 +90,8 @@ bool UpdateSurfaceAndInputDataForDebug(inout SurfaceData surfaceData, inout Inpu
         surfaceData.normalTS = normalTS;
         changed = true;
     }
+    
+    surfaceData.custom0 = 0; // CUSTOM: Custom gbuffer #0 needs to be initialized with something
 
     return changed;
 }

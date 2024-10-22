@@ -264,6 +264,8 @@ SurfaceData VFXGetSurfaceData(const VFX_VARYING_PS_INPUTS i, float3 normalWS, co
     #if URP_USE_EMISSIVE
     surfaceData.emission = GetSurfaceEmissive(i, uvData);
     #endif
+    
+    surfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 
     return surfaceData;
 }

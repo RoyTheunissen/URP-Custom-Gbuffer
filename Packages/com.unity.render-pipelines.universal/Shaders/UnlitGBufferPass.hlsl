@@ -97,6 +97,8 @@ FragmentOutput UnlitPassFragment(Varyings input)
     surfaceData.occlusion = 1;
 #endif
 
+    surfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
+
     return SurfaceDataToGbuffer(surfaceData, inputData, float3(0,0,0), kLightingInvalid);
 }
 

@@ -53,6 +53,10 @@ namespace UnityEditor.ShaderGraph
                 new ColorControl(UnityEngine.Color.grey, false), ShaderStage.Fragment);
             public static BlockFieldDescriptor AbsorptionStrength = new BlockFieldDescriptor(SurfaceDescription.name, "AbsorptionStrength", "Color Absorption Strength", "SURFACEDESCRIPTION_COLOR_ABSORPTION_STRENGTH",
                 new FloatControl(0.5f), ShaderStage.Fragment);
+            
+            // CUSTOM: Added custom gbuffer #0 here
+            public static BlockFieldDescriptor Custom0 = new BlockFieldDescriptor(SurfaceDescription.name, "Custom0", "Custom #0", "SURFACEDESCRIPTION_CUSTOM0",
+                new Vector4Control(Vector4.zero), ShaderStage.Fragment);
         }
 
         [GenerateBlocks]

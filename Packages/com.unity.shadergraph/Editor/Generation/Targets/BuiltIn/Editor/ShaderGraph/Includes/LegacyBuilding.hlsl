@@ -32,6 +32,7 @@ SurfaceData SurfaceDescriptionToSurfaceData(SurfaceDescription surfaceDescriptio
     surface.alpha               = saturate(alpha);
     surface.clearCoatMask       = 0;
     surface.clearCoatSmoothness = 1;
+    surface.custom0             = surfaceDescription.Custom0; // CUSTOM: Custom gbuffer #0 needs to be initialized with something
     return surface;
 }
 

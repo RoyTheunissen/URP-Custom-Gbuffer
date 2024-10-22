@@ -122,6 +122,8 @@ inline void InitializeParticleLitSurfaceData(float2 uv, float3 blendUv, float4 p
 
     outSurfaceData.clearCoatMask       = half(0.0);
     outSurfaceData.clearCoatSmoothness = half(1.0);
+    
+    outSurfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 }
 
 inline void InitializeParticleLitSurfaceData(ParticleParams params, out SurfaceData outSurfaceData)
@@ -160,6 +162,8 @@ inline void InitializeParticleLitSurfaceData(ParticleParams params, out SurfaceD
 
     outSurfaceData.clearCoatMask       = half(0.0);
     outSurfaceData.clearCoatSmoothness = half(1.0);
+    
+    outSurfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 }
 
 #endif // UNIVERSAL_PARTICLES_LIT_INPUT_INCLUDED

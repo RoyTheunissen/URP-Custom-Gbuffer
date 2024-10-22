@@ -40,7 +40,7 @@ namespace UnityEngine.Rendering.Universal
                 m_ShaderTagIdList.Add(new ShaderTagId(DecalShaderPassNames.DecalGBufferMesh));
 
             m_PassData = new PassData();
-            m_GbufferAttachments = new RTHandle[4];
+            m_GbufferAttachments = new RTHandle[UniversalRenderer.TotalGbufferCount]; // CUSTOM: Respect new gbuffer count
 
             breakGBufferAndDeferredRenderPass = false;
         }
@@ -59,6 +59,9 @@ namespace UnityEngine.Rendering.Universal
                 m_GbufferAttachments[1] = m_DeferredLights.GbufferAttachments[1];
                 m_GbufferAttachments[2] = m_DeferredLights.GbufferAttachments[2];
                 m_GbufferAttachments[3] = m_DeferredLights.GbufferAttachments[3];
+                
+                // CUSTOM: Custom gbuffer #0 is actually in GbuferAttachments #3. This new one is the lighting buffer, which has shifted.
+                m_GbufferAttachments[4] = m_DeferredLights.GbufferAttachments[4];
 
                 if (m_DecalLayers)
                 {
@@ -102,6 +105,9 @@ namespace UnityEngine.Rendering.Universal
                 m_GbufferAttachments[1] = m_DeferredLights.GbufferAttachments[1];
                 m_GbufferAttachments[2] = m_DeferredLights.GbufferAttachments[2];
                 m_GbufferAttachments[3] = m_DeferredLights.GbufferAttachments[3];
+                
+                // CUSTOM: Custom gbuffer #0 is actually in GbuferAttachments #3. This new one is the lighting buffer, which has shifted.
+                m_GbufferAttachments[4] = m_DeferredLights.GbufferAttachments[4];
             }
 
             // Disable obsolete warning for internal usage
@@ -177,13 +183,15 @@ namespace UnityEngine.Rendering.Universal
                 builder.SetRenderAttachment(gBufferHandles[1], 1, AccessFlags.Write);
                 builder.SetRenderAttachment(gBufferHandles[2], 2, AccessFlags.Write);
                 builder.SetRenderAttachment(gBufferHandles[3], 3, AccessFlags.Write);
+                builder.SetRenderAttachment(gBufferHandles[4], 4, AccessFlags.Write); // CUSTOM: Custom gbuffer #0 is actually in GbuferAttachments #3. This new one is the lighting buffer, which has shifted.
+                
                 builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, AccessFlags.Read);
 
                 if (renderGraph.nativeRenderPassesEnabled)
                 {
-                    builder.SetInputAttachment(gBufferHandles[4], 0, AccessFlags.Read);
+                    builder.SetInputAttachment(gBufferHandles[4 + UniversalRenderer.CustomGbufferCount], 0, AccessFlags.Read); // CUSTOM: Made it respect the custom gbuffers
                     if (m_DecalLayers)
-                        builder.SetInputAttachment(gBufferHandles[5], 1, AccessFlags.Read);
+                        builder.SetInputAttachment(gBufferHandles[5 + UniversalRenderer.CustomGbufferCount], 1, AccessFlags.Read); // CUSTOM: Made it respect the custom gbuffers
                 }
                 else if (cameraDepthTexture.IsValid())
                     builder.UseTexture(cameraDepthTexture, AccessFlags.Read);

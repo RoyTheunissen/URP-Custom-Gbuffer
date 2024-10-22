@@ -17,33 +17,50 @@
 #endif
 
 #if _RENDER_PASS_ENABLED
-    #define GBUFFER_OPTIONAL_SLOT_1 GBuffer4
+    // CUSTOM: Increment by 1 because of custom gbuffer
+    #define GBUFFER_OPTIONAL_SLOT_1 GBuffer5
     #define GBUFFER_OPTIONAL_SLOT_1_TYPE float
     #if OUTPUT_SHADOWMASK && (defined(_WRITE_RENDERING_LAYERS) || defined(_LIGHT_LAYERS))
-        #define GBUFFER_OPTIONAL_SLOT_2 GBuffer5
-        #define GBUFFER_OPTIONAL_SLOT_3 GBuffer6
-        #define GBUFFER_LIGHT_LAYERS GBuffer5
-        #define GBUFFER_SHADOWMASK GBuffer6
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_OPTIONAL_SLOT_2 GBuffer6
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_OPTIONAL_SLOT_3 GBuffer7
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_LIGHT_LAYERS GBuffer6
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_SHADOWMASK GBuffer7
     #elif OUTPUT_SHADOWMASK
-        #define GBUFFER_OPTIONAL_SLOT_2 GBuffer5
-        #define GBUFFER_SHADOWMASK GBuffer5
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_OPTIONAL_SLOT_2 GBuffer6
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_SHADOWMASK GBuffer6
     #elif (defined(_WRITE_RENDERING_LAYERS) || defined(_LIGHT_LAYERS))
-        #define GBUFFER_OPTIONAL_SLOT_2 GBuffer5
-        #define GBUFFER_LIGHT_LAYERS GBuffer5
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_OPTIONAL_SLOT_2 GBuffer6
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_LIGHT_LAYERS GBuffer6
     #endif //#if OUTPUT_SHADOWMASK && defined(_WRITE_RENDERING_LAYERS)
 #else
     #define GBUFFER_OPTIONAL_SLOT_1_TYPE half4
     #if OUTPUT_SHADOWMASK && (defined(_WRITE_RENDERING_LAYERS) || defined(_LIGHT_LAYERS))
-        #define GBUFFER_OPTIONAL_SLOT_1 GBuffer4
-        #define GBUFFER_OPTIONAL_SLOT_2 GBuffer5
-        #define GBUFFER_LIGHT_LAYERS GBuffer4
-        #define GBUFFER_SHADOWMASK GBuffer5
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_OPTIONAL_SLOT_1 GBuffer5
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_OPTIONAL_SLOT_2 GBuffer6
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_LIGHT_LAYERS GBuffer5
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_SHADOWMASK GBuffer6
     #elif OUTPUT_SHADOWMASK
-        #define GBUFFER_OPTIONAL_SLOT_1 GBuffer4
-        #define GBUFFER_SHADOWMASK GBuffer4
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_OPTIONAL_SLOT_1 GBuffer5
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_SHADOWMASK GBuffer5
     #elif (defined(_WRITE_RENDERING_LAYERS) || defined(_LIGHT_LAYERS))
-        #define GBUFFER_OPTIONAL_SLOT_1 GBuffer4
-        #define GBUFFER_LIGHT_LAYERS GBuffer4
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_OPTIONAL_SLOT_1 GBuffer5
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER_LIGHT_LAYERS GBuffer5
     #endif //#if OUTPUT_SHADOWMASK && defined(_WRITE_RENDERING_LAYERS)
 #endif //#if _RENDER_PASS_ENABLED
 #define kLightingInvalid  -1  // No dynamic lighting: can aliase any other material type as they are skipped using stencil
@@ -67,16 +84,17 @@ struct FragmentOutput
     half4 GBuffer0 : SV_Target0;
     half4 GBuffer1 : SV_Target1;
     half4 GBuffer2 : SV_Target2;
-    half4 GBuffer3 : SV_Target3; // Camera color attachment
+    half4 GBuffer3 : SV_Target3; // CUSTOM: Custom gbuffer #0
+    half4 GBuffer4 : SV_Target4; // Camera color attachment // CUSTOM: Increment by 1 because of custom gbuffer
 
     #ifdef GBUFFER_OPTIONAL_SLOT_1
-    GBUFFER_OPTIONAL_SLOT_1_TYPE GBuffer4 : SV_Target4;
+    GBUFFER_OPTIONAL_SLOT_1_TYPE GBuffer5 : SV_Target5; // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
     #ifdef GBUFFER_OPTIONAL_SLOT_2
-    half4 GBuffer5 : SV_Target5;
+    half4 GBuffer6 : SV_Target6; // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
     #ifdef GBUFFER_OPTIONAL_SLOT_3
-    half4 GBuffer6 : SV_Target6;
+    half4 GBuffer7 : SV_Target7; // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
 };
 
@@ -134,9 +152,10 @@ FragmentOutput SurfaceDataToGbuffer(SurfaceData surfaceData, InputData inputData
     output.GBuffer0 = half4(surfaceData.albedo.rgb, PackMaterialFlags(materialFlags));   // albedo          albedo          albedo          materialFlags   (sRGB rendertarget)
     output.GBuffer1 = half4(surfaceData.specular.rgb, surfaceData.occlusion);            // specular        specular        specular        occlusion
     output.GBuffer2 = half4(packedNormalWS, surfaceData.smoothness);                     // encoded-normal  encoded-normal  encoded-normal  smoothness
-    output.GBuffer3 = half4(globalIllumination, 1);                                      // GI              GI              GI              unused          (lighting buffer)
+    output.GBuffer3 = surfaceData.custom0; // CUSTOM: Custom gbuffer #0
+    output.GBuffer4 = half4(globalIllumination, 1);                                      // GI              GI              GI              unused          (lighting buffer) // CUSTOM: Increment by 1 because of custom gbuffer
     #if _RENDER_PASS_ENABLED
-    output.GBuffer4 = inputData.positionCS.z;
+    output.GBuffer5 = inputData.positionCS.z;  // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
     #if OUTPUT_SHADOWMASK
     output.GBUFFER_SHADOWMASK = inputData.shadowMask; // will have unity_ProbesOcclusion value if subtractive lighting is used (baked)
@@ -150,7 +169,7 @@ FragmentOutput SurfaceDataToGbuffer(SurfaceData surfaceData, InputData inputData
 }
 
 // This decodes the Gbuffer into a SurfaceData struct
-SurfaceData SurfaceDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2, int lightingMode)
+SurfaceData SurfaceDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2, half4 gbuffer3, int lightingMode) // CUSTOM: Add custom gbuffer #0 here (gbuffer3)
 {
     SurfaceData surfaceData;
 
@@ -166,6 +185,8 @@ SurfaceData SurfaceDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer
 
     surfaceData.emission = (half3)0; // Note: this is not made available at lighting pass in this renderer - emission contribution is included (with GI) in the value GBuffer3.rgb, that is used as a renderTarget during lighting
     surfaceData.normalTS = (half3)0; // Note: does this normalTS member need to be in SurfaceData? It looks like an intermediate value
+    
+    surfaceData.custom0 = gbuffer3.rgba; // CUSTOM: Data that goes into the extra gbuffer. You can also split this up into separate fields.
 
     return surfaceData;
 }
@@ -207,9 +228,10 @@ FragmentOutput BRDFDataToGbuffer(BRDFData brdfData, InputData inputData, half sm
     output.GBuffer0 = half4(brdfData.albedo.rgb, PackMaterialFlags(materialFlags));  // diffuse           diffuse         diffuse         materialFlags   (sRGB rendertarget)
     output.GBuffer1 = half4(packedSpecular, occlusion);                              // metallic/specular specular        specular        occlusion
     output.GBuffer2 = half4(packedNormalWS, smoothness);                             // encoded-normal    encoded-normal  encoded-normal  smoothness
-    output.GBuffer3 = half4(globalIllumination, 1);                                  // GI                GI              GI              unused          (lighting buffer)
+    output.GBuffer3 = brdfData.custom0; // CUSTOM: Custom gbuffer #0
+    output.GBuffer4 = half4(globalIllumination, 1);                                  // GI                GI              GI              unused          (lighting buffer) // CUSTOM: Increment by 1 because of custom gbuffer
     #if _RENDER_PASS_ENABLED
-    output.GBuffer4 = inputData.positionCS.z;
+    output.GBuffer5 = inputData.positionCS.z;  // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
     #if OUTPUT_SHADOWMASK
     output.GBUFFER_SHADOWMASK = inputData.shadowMask; // will have unity_ProbesOcclusion value if subtractive lighting is used (baked)
@@ -223,12 +245,13 @@ FragmentOutput BRDFDataToGbuffer(BRDFData brdfData, InputData inputData, half sm
 }
 
 // This decodes the Gbuffer into a SurfaceData struct
-BRDFData BRDFDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2)
+BRDFData BRDFDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2, half4 gbuffer3)  // CUSTOM: Add custom gbuffer #0 here (gbuffer3)
 {
     half3 albedo = gbuffer0.rgb;
     half3 specular = gbuffer1.rgb;
     uint materialFlags = UnpackMaterialFlags(gbuffer0.a);
     half smoothness = gbuffer2.a;
+    half4 custom0 = gbuffer3; // CUSTOM: Data that goes into the extra gbuffer. You can also split this up into separate fields.
 
     BRDFData brdfData = (BRDFData)0;
     half alpha = half(1.0); // NOTE: alpha can get modfied, forward writes it out (_ALPHAPREMULTIPLY_ON).
@@ -255,7 +278,7 @@ BRDFData BRDFDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2)
         brdfDiffuse = albedo * oneMinusReflectivity;
         brdfSpecular = lerp(kDielectricSpec.rgb, albedo, metallic);
     }
-    InitializeBRDFDataDirect(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, alpha, brdfData);
+    InitializeBRDFDataDirect(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, alpha, custom0, brdfData);  // CUSTOM: Pass along custom gbuffer #0 here
 
     return brdfData;
 }

@@ -14,6 +14,7 @@ struct SurfaceData
     half  alpha;
     half  clearCoatMask;
     half  clearCoatSmoothness;
+    half4 custom0; // CUSTOM: Data that goes into the extra gbuffer. You can also split this up into separate fields.
 };
 
 #endif

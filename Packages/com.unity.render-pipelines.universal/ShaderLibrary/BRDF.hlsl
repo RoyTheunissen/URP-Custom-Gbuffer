@@ -23,6 +23,8 @@ struct BRDFData
     // them in the light loop. Take a look at DirectBRDF function for detailed explaination.
     half normalizationTerm;     // roughness * 4.0 + 2.0
     half roughness2MinusOne;    // roughness^2 - 1.0
+    
+    half4 custom0; // CUSTOM: Data that goes into the extra gbuffer. You can also split this up into separate fields.
 };
 
 half ReflectivitySpecular(half3 specular)
@@ -47,7 +49,7 @@ half MetallicFromReflectivity(half reflectivity)
     return (reflectivity - kDielectricSpec.r) / oneMinusDielectricSpec;
 }
 
-inline void InitializeBRDFDataDirect(half3 albedo, half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, inout half alpha, out BRDFData outBRDFData)
+inline void InitializeBRDFDataDirect(half3 albedo, half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, inout half alpha, half4 custom0, out BRDFData outBRDFData) // CUSTOM: Pass along custom gbuffer #0 here
 {
     outBRDFData = (BRDFData)0;
     outBRDFData.albedo = albedo;
@@ -70,16 +72,19 @@ inline void InitializeBRDFDataDirect(half3 albedo, half3 diffuse, half3 specular
         // TODO: would be clearer to multiply this once to accumulated diffuse lighting at end instead of the surface property.
         outBRDFData.diffuse *= alpha;
     #endif
+    
+    // CUSTOM: Pass along custom gbuffer #0 here
+    outBRDFData.custom0 = custom0;
 }
 
 // Legacy: do not call, will not correctly initialize albedo property.
-inline void InitializeBRDFDataDirect(half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, inout half alpha, out BRDFData outBRDFData)
+inline void InitializeBRDFDataDirect(half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, inout half alpha, half4 custom0, out BRDFData outBRDFData) // CUSTOM: Pass along custom gbuffer #0 here 
 {
-    InitializeBRDFDataDirect(half3(0.0, 0.0, 0.0), diffuse, specular, reflectivity, oneMinusReflectivity, smoothness, alpha, outBRDFData);
+    InitializeBRDFDataDirect(half3(0.0, 0.0, 0.0), diffuse, specular, reflectivity, oneMinusReflectivity, smoothness, alpha, custom0, outBRDFData); // CUSTOM: Pass along custom gbuffer #0
 }
 
 // Initialize BRDFData for material, managing both specular and metallic setup using shader keyword _SPECULAR_SETUP.
-inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half smoothness, inout half alpha, out BRDFData outBRDFData)
+inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half smoothness, inout half alpha, half4 custom0, out BRDFData outBRDFData) // CUSTOM: Pass along custom gbuffer #0 here
 {
 #ifdef _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(specular);
@@ -93,12 +98,12 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
     half3 brdfSpecular = lerp(kDielectricSpec.rgb, albedo, metallic);
 #endif
 
-    InitializeBRDFDataDirect(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, alpha, outBRDFData);
+    InitializeBRDFDataDirect(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, alpha, custom0, outBRDFData); // CUSTOM: Pass along custom gbuffer #0 here
 }
 
 inline void InitializeBRDFData(inout SurfaceData surfaceData, out BRDFData brdfData)
 {
-    InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, brdfData);
+    InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, surfaceData.custom0, brdfData); // CUSTOM: Pass along custom gbuffer #0 here
 }
 
 half3 ConvertF0ForClearCoat15(half3 f0)
@@ -122,6 +127,8 @@ inline void InitializeBRDFDataClearCoat(half clearCoatMask, half clearCoatSmooth
     outBRDFData.normalizationTerm   = outBRDFData.roughness * half(4.0) + half(2.0);
     outBRDFData.roughness2MinusOne  = outBRDFData.roughness2 - half(1.0);
     outBRDFData.grazingTerm         = saturate(clearCoatSmoothness + kDielectricSpec.x);
+    
+    outBRDFData.custom0 = baseBRDFData.custom0; // CUSTOM: Passing along custom gbuffer #0
 
     // Modify Roughness of base layer using coat IOR
     half ieta                        = lerp(1.0h, CLEAR_COAT_IETA, clearCoatMask);

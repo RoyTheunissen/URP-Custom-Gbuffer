@@ -126,6 +126,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
         {
             context.AddBlock(BlockFields.SurfaceDescription.Emission);
             context.AddBlock(BlockFields.SurfaceDescription.Occlusion);
+            context.AddBlock(BlockFields.SurfaceDescription.Custom0); // CUSTOM: Added custom gbuffer #0 here
             context.AddBlock(BlockFields.SurfaceDescription.MapRightTopBack);
             context.AddBlock(BlockFields.SurfaceDescription.MapLeftBottomFront);
             context.AddBlock(BlockFields.SurfaceDescription.AbsorptionStrength, useColorAbsorption || target.allowMaterialOverride);
@@ -385,6 +386,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                 BlockFields.SurfaceDescription.Occlusion,
                 BlockFields.SurfaceDescription.Alpha,
                 BlockFields.SurfaceDescription.AlphaClipThreshold,
+                BlockFields.SurfaceDescription.Custom0, // CUSTOM: Added custom gbuffer #0 here
             };
 
 
