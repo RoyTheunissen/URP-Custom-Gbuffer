@@ -79,6 +79,8 @@ void InitializeSurfaceData(ParticleParams particleParams, out SurfaceData surfac
 
     surfaceData.clearCoatMask       = 0;
     surfaceData.clearCoatSmoothness = 1;
+    
+    surfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -69,11 +69,13 @@ FragmentOutput frag(PackedVaryings packedInput)
         float3 specular = 0;
         float metallic = surfaceDescription.Metallic;
     #endif
+    
+    half4 custom0 = surfaceDescription.Custom0; // CUSTOM: Pass along custom gbuffer #0.
 
     // in LitForwardPass GlobalIllumination (and temporarily LightingPhysicallyBased) are called inside BuiltInFragmentPBR
     // in Deferred rendering we store the sum of these values (and of emission as well) in the GBuffer
     BRDFData brdfData;
-    InitializeBRDFData(surfaceDescription.BaseColor, metallic, specular, surfaceDescription.Smoothness, alpha, brdfData);
+    InitializeBRDFData(surfaceDescription.BaseColor, metallic, specular, surfaceDescription.Smoothness, alpha, custom0, brdfData); // CUSTOM: Pass along custom gbuffer #0
 
     Light mainLight = GetMainLight(inputData.shadowCoord, inputData.positionWS, inputData.shadowMask);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, inputData.shadowMask);

@@ -24,6 +24,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                 BlockFields.SurfaceDescription.Emission,
                 BlockFields.SurfaceDescription.Occlusion,
                 BlockFields.SurfaceDescription.Alpha,
+                BlockFields.SurfaceDescription.Custom0, // CUSTOM: Added custom gbuffer #0 here
             };
 
             GraphUtil.CreateNewGraphWithOutputs(new[] { target }, blockDescriptors);

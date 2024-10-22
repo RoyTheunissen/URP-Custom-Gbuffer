@@ -49,6 +49,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             public bool affectsNormal = true;
             public bool affectsMAOS;
             public bool affectsEmission;
+            public bool affectsCustom0; // CUSTOM: Whether it affects custom gbuffer #0
             public int drawOrder;
             public bool supportLodCrossFade;
             public bool angleFade;
@@ -229,6 +230,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             context.AddBlock(BlockFields.SurfaceDescription.Smoothness, decalData.affectsMAOS);
             context.AddBlock(UniversalBlockFields.SurfaceDescription.MAOSAlpha, decalData.affectsMAOS);
             context.AddBlock(BlockFields.SurfaceDescription.Emission, decalData.affectsEmission);
+            context.AddBlock(BlockFields.SurfaceDescription.Custom0, decalData.affectsCustom0); // CUSTOM: Added custom gbuffer #0 here
         }
 
         public override void GetPropertiesGUI(ref TargetPropertyGUIContext context, Action onChange, Action<String> registerUndo)
@@ -604,6 +606,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                 BlockFields.SurfaceDescription.Occlusion,
                 BlockFields.SurfaceDescription.Smoothness,
                 UniversalBlockFields.SurfaceDescription.MAOSAlpha,
+                BlockFields.SurfaceDescription.Custom0, // CUSTOM: Added custom gbuffer #0 here
             };
 
             public static BlockFieldDescriptor[] ForwardOnlyEmissive = new BlockFieldDescriptor[]
@@ -624,6 +627,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
 
                 UniversalBlockFields.SurfaceDescription.MAOSAlpha,
                 BlockFields.SurfaceDescription.Emission,
+                BlockFields.SurfaceDescription.Custom0, // CUSTOM: Added custom gbuffer #0 here
             };
         }
         #endregion

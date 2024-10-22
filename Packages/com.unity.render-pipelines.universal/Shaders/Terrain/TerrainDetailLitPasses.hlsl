@@ -90,6 +90,8 @@ void InitializeSurfaceData(half3 albedo, half alpha, out SurfaceData surfaceData
     surfaceData.clearCoatMask = 0;
     surfaceData.clearCoatSmoothness = 1;
     surfaceData.normalTS = half3(0, 0, 1);
+    
+    surfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 }
 
 half4 UniversalTerrainLit(InputData inputData, SurfaceData surfaceData)

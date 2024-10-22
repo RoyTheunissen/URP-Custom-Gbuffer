@@ -176,6 +176,8 @@ Shader "Hidden/TerrainEngine/Details/UniversalPipeline/Vertexlit"
                 SurfaceData surfaceData = (SurfaceData)0;
                 surfaceData.alpha = 1.0;
                 surfaceData.occlusion = 1.0;
+                
+                surfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 
                 InputData inputData = (InputData)0;
                 inputData.normalWS = input.NormalWS;

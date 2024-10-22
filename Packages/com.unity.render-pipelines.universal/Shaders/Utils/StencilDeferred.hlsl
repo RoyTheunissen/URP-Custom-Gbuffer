@@ -84,43 +84,65 @@ TEXTURE2D_X_HALF(_GBuffer0);
 TEXTURE2D_X_HALF(_GBuffer1);
 TEXTURE2D_X_HALF(_GBuffer2);
 
+ // CUSTOM: Custom gbuffer
+TEXTURE2D_X_HALF(_GBuffer3);
 
 #if _RENDER_PASS_ENABLED
     #define GBUFFER0 0
     #define GBUFFER1 1
     #define GBUFFER2 2
     #define GBUFFER3 3
+    
+    // CUSTOM: Had to add a gbuffer
+    #define GBUFFER4 4
 
     FRAMEBUFFER_INPUT_X_HALF(GBUFFER0);
     FRAMEBUFFER_INPUT_X_HALF(GBUFFER1);
     FRAMEBUFFER_INPUT_X_HALF(GBUFFER2);
-    FRAMEBUFFER_INPUT_X_FLOAT(GBUFFER3);
+    
+    // CUSTOM: Custom gbuffer
+    FRAMEBUFFER_INPUT_X_HALF(GBUFFER3);
+    
+    // CUSTOM: GBuffer Depth (Depth as Colour). Had to be incremented by 1.
+    FRAMEBUFFER_INPUT_X_FLOAT(GBUFFER4);
 
     #if OUTPUT_SHADOWMASK && (defined(_WRITE_RENDERING_LAYERS) || defined(_LIGHT_LAYERS))
-        #define GBUFFER4 4
+        // CUSTOM: Increment by 1 because of custom gbuffer
         #define GBUFFER5 5
-        TEXTURE2D_X_HALF(_GBuffer4);
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER6 6
+         // CUSTOM: Increment by 1 because of custom gbuffer
         TEXTURE2D_X_HALF(_GBuffer5);
-        FRAMEBUFFER_INPUT_X_HALF(GBUFFER4);
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        TEXTURE2D_X_HALF(_GBuffer6);
+         // CUSTOM: Increment by 1 because of custom gbuffer
         FRAMEBUFFER_INPUT_X_HALF(GBUFFER5);
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        FRAMEBUFFER_INPUT_X_HALF(GBUFFER6);
     #elif OUTPUT_SHADOWMASK || defined(_WRITE_RENDERING_LAYERS) || defined(_LIGHT_LAYERS)
-        #define GBUFFER4 4
-        TEXTURE2D_X_HALF(_GBuffer4);
-        FRAMEBUFFER_INPUT_X_HALF(GBUFFER4);
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        #define GBUFFER5 5
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        TEXTURE2D_X_HALF(_GBuffer5);
+         // CUSTOM: Increment by 1 because of custom gbuffer
+        FRAMEBUFFER_INPUT_X_HALF(GBUFFER5);
     #endif
 
 #else
     #ifdef GBUFFER_OPTIONAL_SLOT_1
-        TEXTURE2D_X_HALF(_GBuffer4);
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        TEXTURE2D_X_HALF(_GBuffer5);
     #endif
 
     #ifdef GBUFFER_OPTIONAL_SLOT_2
-        TEXTURE2D_X(_GBuffer5);
+        // CUSTOM: Increment by 1 because of custom gbuffer
+        TEXTURE2D_X(_GBuffer6);
     #endif
 #endif
 
 #ifdef GBUFFER_OPTIONAL_SLOT_3
-TEXTURE2D_X(_GBuffer6);
+ // CUSTOM: Increment by 1 because of custom gbuffer
+TEXTURE2D_X(_GBuffer7);
 #endif
 
 float4x4 _ScreenToWorld[2];
@@ -260,12 +282,16 @@ half4 DeferredShading(Varyings input) : SV_Target
     half4 shadowMask = 1.0;
 
     #if _RENDER_PASS_ENABLED
-    float d        = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER3, input.positionCS.xy).x;
+    float d        = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER4, input.positionCS.xy).x; // CUSTOM: Increment by 1 because of custom gbuffer
     half4 gbuffer0 = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER0, input.positionCS.xy);
     half4 gbuffer1 = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER1, input.positionCS.xy);
     half4 gbuffer2 = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER2, input.positionCS.xy);
+    
+    // CUSTOM: Custom gbuffer
+    half4 gbuffer3 = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER3, input.positionCS.xy);
+    
     #if defined(_DEFERRED_MIXED_LIGHTING)
-    shadowMask = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER4, input.positionCS.xy);
+    shadowMask = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER5, input.positionCS.xy); // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
     #else
     // Using SAMPLE_TEXTURE2D is faster than using LOAD_TEXTURE2D on iOS platforms (5% faster shader).
@@ -274,6 +300,10 @@ half4 DeferredShading(Varyings input) : SV_Target
     half4 gbuffer0 = SAMPLE_TEXTURE2D_X_LOD(_GBuffer0, sampler_PointClamp, screen_uv, 0);
     half4 gbuffer1 = SAMPLE_TEXTURE2D_X_LOD(_GBuffer1, sampler_PointClamp, screen_uv, 0);
     half4 gbuffer2 = SAMPLE_TEXTURE2D_X_LOD(_GBuffer2, sampler_PointClamp, screen_uv, 0);
+    
+    // CUSTOM: Custom gbuffer
+    half4 gbuffer3 = SAMPLE_TEXTURE2D_X_LOD(_GBuffer3, sampler_PointClamp, screen_uv, 0);
+    
     #if defined(_DEFERRED_MIXED_LIGHTING)
     shadowMask = SAMPLE_TEXTURE2D_X_LOD(MERGE_NAME(_, GBUFFER_SHADOWMASK), sampler_PointClamp, screen_uv, 0);
     #endif
@@ -310,7 +340,8 @@ half4 DeferredShading(Varyings input) : SV_Target
 
     #ifdef _LIGHT_LAYERS
         #if _RENDER_PASS_ENABLED
-            float renderingLayers = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER4, input.positionCS.xy).x;
+            // CUSTOM: Increment by 1 because of custom gbuffer
+            float renderingLayers = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER5, input.positionCS.xy).x;
         #else
     float4 renderingLayers = SAMPLE_TEXTURE2D_X_LOD(MERGE_NAME(_, GBUFFER_LIGHT_LAYERS), sampler_PointClamp, screen_uv, 0);
         #endif
@@ -340,10 +371,10 @@ half4 DeferredShading(Varyings input) : SV_Target
         #else
         bool materialSpecularHighlightsOff = (materialFlags & kMaterialFlagSpecularHighlightsOff);
         #endif
-        BRDFData brdfData = BRDFDataFromGbuffer(gbuffer0, gbuffer1, gbuffer2);
+        BRDFData brdfData = BRDFDataFromGbuffer(gbuffer0, gbuffer1, gbuffer2, gbuffer3); // CUSTOM: Pass along the new custom gbuffer
         color = LightingPhysicallyBased(brdfData, unityLight, inputData.normalWS, inputData.viewDirectionWS, materialSpecularHighlightsOff);
     #elif defined(_SIMPLELIT)
-        SurfaceData surfaceData = SurfaceDataFromGbuffer(gbuffer0, gbuffer1, gbuffer2, kLightingSimpleLit);
+        SurfaceData surfaceData = SurfaceDataFromGbuffer(gbuffer0, gbuffer1, gbuffer2, gbuffer3, kLightingSimpleLit); // CUSTOM: Pass along the new custom gbuffer
         half3 attenuatedLightColor = unityLight.color * (unityLight.distanceAttenuation * unityLight.shadowAttenuation);
         half3 diffuseColor = LightingLambert(attenuatedLightColor, unityLight.direction, inputData.normalWS);
         half smoothness = exp2(10 * surfaceData.smoothness + 1);
@@ -352,6 +383,11 @@ half4 DeferredShading(Varyings input) : SV_Target
         // TODO: if !defined(_SPECGLOSSMAP) && !defined(_SPECULAR_COLOR), force specularColor to 0 in gbuffer code
         color = diffuseColor * surfaceData.albedo + specularColor;
     #endif
+    
+    // CUSTOM: INTEGRATE CUSTOM GBUFFER #0 (Deferred)
+    // CUSTOM: Just to prove that it's working: use custom gbuffer #0 's R channel to invert the deferred lighting colour.
+    // This is for deferred lighting. The forward lighting version is in the UniversalFragmentPBR function in Lighting.hlsl
+    color.rgb = lerp(color.rgb, 1 - color.rgb, gbuffer3.r);
 
     return half4(color, alpha);
 }
@@ -361,7 +397,7 @@ half4 FragFog(Varyings input) : SV_Target
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     #if _RENDER_PASS_ENABLED
-        float d = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER3, input.positionCS.xy).x;
+        float d = LOAD_FRAMEBUFFER_X_INPUT(GBUFFER4, input.positionCS.xy).x;  // CUSTOM: Increment by 1 because of custom gbuffer
     #else
         float d = LOAD_TEXTURE2D_X(_CameraDepthTexture, input.positionCS.xy).x;
     #endif

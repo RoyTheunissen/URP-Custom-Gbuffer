@@ -90,7 +90,8 @@ namespace UnityEngine.Rendering.Universal.Internal
             "_GBuffer3",
             "_GBuffer4",
             "_GBuffer5",
-            "_GBuffer6"
+            "_GBuffer6",
+            "_GBuffer7", // CUSTOM:
         };
 
         internal static readonly int[] k_GBufferShaderPropertyIDs = new int[]
@@ -102,6 +103,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             Shader.PropertyToID(k_GBufferNames[4]),
             Shader.PropertyToID(k_GBufferNames[5]),
             Shader.PropertyToID(k_GBufferNames[6]),
+            Shader.PropertyToID(k_GBufferNames[7]), // CUSTOM:
         };
 
         static readonly string[] k_StencilDeferredPassNames = new string[]
@@ -143,15 +145,29 @@ namespace UnityEngine.Rendering.Universal.Internal
         internal int GBufferAlbedoIndex { get { return 0; } }
         internal int GBufferSpecularMetallicIndex { get { return 1; } }
         internal int GBufferNormalSmoothnessIndex { get { return 2; } }
-        internal int GBufferLightingIndex { get { return 3; } }
+        
+        // CUSTOM: Custom Gbuffer #0
+        internal int GBufferCustom0Index { get { return 3; } }
+        
+        // CUSTOM: Incremented this by 1 because the custom gbuffer comes before this. The reason I added the custom gbuffer *before* and not after the lighting gbuffer
+        // is because the lighting buffer is often not sent along as an attachment, shifting the indices of all the buffers that come after it. That would mean
+        // that the custom gbuffer's index would be off by 1 sometimes, which is confusing to work with. The other gbuffers are optional and were made to have
+        // dynamic indices so it's less confusing there. For clarity's sake I would argue that all mandatory gbuffers should retain the same indices.
+        internal int GBufferLightingIndex { get { return UniversalRenderer.TotalGbufferCount - 1; } }
+
+        // CUSTOM: Base index now respects the amount of custom gbuffers
         internal int GbufferDepthIndex { get { return UseFramebufferFetch ? GBufferLightingIndex + 1 : -1; } }
+        // CUSTOM: Base index now respects the amount of custom gbuffers
         internal int GBufferRenderingLayers { get { return UseRenderingLayers ? GBufferLightingIndex + (UseFramebufferFetch ? 1 : 0) + 1 : -1; } }
         // Shadow Mask can change at runtime. Because of this it needs to come after the non-changing buffers.
+        // CUSTOM: Base index now respects the amount of custom gbuffers
         internal int GBufferShadowMask { get { return UseShadowMask ? GBufferLightingIndex + (UseFramebufferFetch ? 1 : 0) + (UseRenderingLayers ? 1 : 0) + 1 : -1; } }
         // Color buffer count (not including dephStencil).
-        internal int GBufferSliceCount { get { return 4 + (UseFramebufferFetch ? 1 : 0) + (UseShadowMask ? 1 : 0) + (UseRenderingLayers ? 1 : 0); } }
+        // CUSTOM: Base count now respects the amount of custom gbuffers
+        internal int GBufferSliceCount { get { return UniversalRenderer.TotalGbufferCount + (UseFramebufferFetch ? 1 : 0) + (UseShadowMask ? 1 : 0) + (UseRenderingLayers ? 1 : 0); } }
 
-        internal int GBufferInputAttachmentCount { get { return 4 + (UseShadowMask ? 1 : 0); } }
+        // CUSTOM: Base count now respects the amount of custom gbuffers
+        internal int GBufferInputAttachmentCount { get { return UniversalRenderer.TotalGbufferCount + (UseShadowMask ? 1 : 0); } }
 
         internal GraphicsFormat GetGBufferFormat(int index)
         {
@@ -161,6 +177,8 @@ namespace UnityEngine.Rendering.Universal.Internal
                 return GraphicsFormat.R8G8B8A8_UNorm;
             else if (index == GBufferNormalSmoothnessIndex)
                 return AccurateGbufferNormals ? GraphicsFormat.R8G8B8A8_UNorm : DepthNormalOnlyPass.GetGraphicsFormat(); // normal normal normal packedSmoothness
+            else if (index == GBufferCustom0Index) // CUSTOM: Custom gbuffer #0
+                return GraphicsFormat.R8G8B8A8_SRGB; // CUSTOM: Custom gbuffer #0
             else if (index == GBufferLightingIndex) // Emissive+baked: Most likely B10G11R11_UFloatPack32 or R16G16B16A16_SFloat
                 return GraphicsFormat.None;
             else if (index == GbufferDepthIndex) // Render-pass on mobiles: reading back real depth-buffer is either inefficient (Arm Vulkan) or impossible (Metal).
@@ -459,20 +477,34 @@ namespace UnityEngine.Rendering.Universal.Internal
             this.DeferredInputAttachments[0] = this.GbufferAttachments[0];
             this.DeferredInputAttachments[1] = this.GbufferAttachments[1];
             this.DeferredInputAttachments[2] = this.GbufferAttachments[2];
-            this.DeferredInputAttachments[3] = this.GbufferAttachments[4];
+            
+            // CUSTOM: Custom gbuffer #0. 
+            this.DeferredInputAttachments[3] = this.GbufferAttachments[3]; 
+            
+            // CUSTOM: This is Gbuffer Depth (Depth as Colour). We added our custom gbuffers *before* that, so this needs move over.
+            // Note that we skip GbufferAttachments[4]. That's the lighting buffer, and that was always skipped.
+            // This does cause somewhat inconsistent indices for all buffers after the lighting buffer, but that's then only
+            // the optional buffers which were already set up to work with dynamic indices, so it's less confusing for those.
+            this.DeferredInputAttachments[UniversalRenderer.TotalGbufferCount - 1] = this.GbufferAttachments[5];
+
 
             if (UseShadowMask && UseRenderingLayers)
             {
-                this.DeferredInputAttachments[4] = this.GbufferAttachments[GBufferShadowMask];
-                this.DeferredInputAttachments[5] = this.GbufferAttachments[GBufferRenderingLayers];
+                // CUSTOM: Set up to respect custom gbuffers
+                this.DeferredInputAttachments[UniversalRenderer.TotalGbufferCount] = this.GbufferAttachments[GBufferShadowMask];
+                
+                // CUSTOM: Set up to respect custom gbuffers
+                this.DeferredInputAttachments[UniversalRenderer.TotalGbufferCount + 1] = this.GbufferAttachments[GBufferRenderingLayers];
             }
             else if (UseShadowMask)
             {
-                this.DeferredInputAttachments[4] = this.GbufferAttachments[GBufferShadowMask];
+                // CUSTOM: Set up to respect custom gbuffers
+                this.DeferredInputAttachments[UniversalRenderer.TotalGbufferCount] = this.GbufferAttachments[GBufferShadowMask];
             }
             else if (UseRenderingLayers)
             {
-                this.DeferredInputAttachments[4] = this.GbufferAttachments[GBufferRenderingLayers];
+                // CUSTOM: Set up to respect custom gbuffers
+                this.DeferredInputAttachments[UniversalRenderer.TotalGbufferCount] = this.GbufferAttachments[GBufferRenderingLayers];
             }
         }
 
@@ -502,13 +534,17 @@ namespace UnityEngine.Rendering.Universal.Internal
 
             this.GbufferAttachments[this.GBufferLightingIndex] = colorAttachment;
             this.DepthAttachment = depthAttachment;
-
-            var inputCount = 4 + (UseShadowMask ?  1 : 0) + (UseRenderingLayers ?  1 : 0);
-            if (this.DeferredInputAttachments == null && this.UseFramebufferFetch && this.GbufferAttachments.Length >= 3 ||
+            
+            var inputCount = UniversalRenderer.TotalGbufferCount + (UseShadowMask ?  1 : 0) + (UseRenderingLayers ?  1 : 0); // CUSTOM: Respect custom gbuffer count
+            if (this.DeferredInputAttachments == null && this.UseFramebufferFetch && this.GbufferAttachments.Length >= 3 + UniversalRenderer.CustomGbufferCount || // CUSTOM: Respect custom gbuffer count
                 (this.DeferredInputAttachments != null && inputCount != this.DeferredInputAttachments.Length))
             {
                 this.DeferredInputAttachments = new RTHandle[inputCount];
                 this.DeferredInputIsTransient = new bool[inputCount];
+                // CUSTOM: i is the deferred input attachment index, and j is the gbuffer attachment index that it maps to.
+                // Keep in mind (this is very, very important) that the lightbuffer is NOT included in the deferred input attachments.
+                // That means that at some point i and j are no longer in sync, and are offset. Nothing needs to be edited here,
+                // I'm just pointing it out because it's confusing, and it should be kept in mind when adding gbuffers.
                 int i, j = 0;
                 for (i = 0; i < inputCount; i++, j++)
                 {

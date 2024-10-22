@@ -37,6 +37,9 @@ float4 VFXGetPixelOutputForward(const VFX_VARYING_PS_INPUTS i, float3 normalWS, 
 {
     SurfaceData surfaceData;
     InputData inputData;
+    
+    // CUSTOM: I cannot seem to find the source for VFXGetURPLitData anywhere. Just to be safe I will initialize custom0 on the surfaceData because that presumably doesn't happen otherwise.
+    surfaceData.custom0 = 0;
 
     VFXGetURPLitData(surfaceData, inputData, i, normalWS, uvData, frontFace, (uint2)0);
     return VFXCalcPixelOutputForward(surfaceData, inputData);
@@ -63,11 +66,15 @@ float4 VFXGetPixelOutputForwardShaderGraph(const VFX_VARYING_PS_INPUTS i, Surfac
 void VFXComputePixelOutputToGBuffer(const VFX_VARYING_PS_INPUTS i, const float3 normalWS, const VFXUVData uvData, out FragmentOutput gBuffer)
 {
     SurfaceData surfaceData;
+    
+    // CUSTOM: I cannot seem to find the source for VFXGetURPLitData anywhere. Just to be safe I will initialize custom0 on the surfaceData because that presumably doesn't happen otherwise.
+    surfaceData.custom0 = 0;
+    
     InputData inputData;
     VFXGetURPLitData(surfaceData, inputData, i, normalWS, uvData, true, (uint2)0);
 
     BRDFData brdfData;
-    InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, brdfData);
+    InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, surfaceData.custom0, brdfData); // CUSTOM: Passing along custom gbuffer #0
 
     half3 color = GlobalIllumination(brdfData, inputData.bakedGI, surfaceData.occlusion, inputData.positionWS, inputData.normalWS, inputData.viewDirectionWS);
     gBuffer = BRDFDataToGbuffer(brdfData, inputData, surfaceData.smoothness, surfaceData.emission + color, surfaceData.occlusion);
@@ -84,7 +91,7 @@ void VFXComputePixelOutputToGBufferShaderGraph(const VFX_VARYING_PS_INPUTS i, Su
     InputData inputData = VFXGetInputData(i, posInput, normalWS, true);
 
     BRDFData brdfData;
-    InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, brdfData);
+    InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, surfaceData.custom0, brdfData); // CUSTOM: Passing along custom gbuffer #0
 
     half3 color = GlobalIllumination(brdfData, inputData.bakedGI, surfaceData.occlusion, inputData.positionWS, inputData.normalWS, inputData.viewDirectionWS);
     gBuffer = BRDFDataToGbuffer(brdfData, inputData, surfaceData.smoothness, surfaceData.emission + color, surfaceData.occlusion);

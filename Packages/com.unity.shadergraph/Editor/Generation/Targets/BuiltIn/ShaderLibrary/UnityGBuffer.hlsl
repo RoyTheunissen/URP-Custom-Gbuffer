@@ -36,9 +36,10 @@ struct FragmentOutput
     half4 GBuffer0 : SV_Target0;
     half4 GBuffer1 : SV_Target1;
     half4 GBuffer2 : SV_Target2;
-    half4 GBuffer3 : SV_Target3; // Camera color attachment
+    half4 GBuffer3 : SV_Target3; // CUSTOM: Custom gbuffer #0
+    half4 GBuffer4 : SV_Target4; // Camera color attachment // CUSTOM: Increment by 1 because of custom gbuffer
     #if OUTPUT_SHADOWMASK
-    half4 GBuffer4 : SV_Target4;
+    half4 GBuffer5 : SV_Target5; // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
 };
 
@@ -129,16 +130,17 @@ FragmentOutput SurfaceDataToGbuffer(SurfaceData surfaceData, InputData inputData
     output.GBuffer0 = half4(surfaceData.albedo.rgb, PackMaterialFlags(materialFlags));   // albedo          albedo          albedo          materialFlags   (sRGB rendertarget)
     output.GBuffer1 = half4(surfaceData.specular.rgb, surfaceData.occlusion);            // specular        specular        specular        occlusion
     output.GBuffer2 = half4(packedNormalWS, packedSmoothness);                           // encoded-normal  encoded-normal  encoded-normal  packed-smoothness
-    output.GBuffer3 = half4(globalIllumination, 1);                                      // GI              GI              GI              [optional: see OutputAlpha()] (lighting buffer)
+    output.GBuffer3 = surfaceData.custom0; // CUSTOM: Custom gbuffer #0
+    output.GBuffer4 = half4(globalIllumination, 1);                                      // GI              GI              GI              [optional: see OutputAlpha()] (lighting buffer) // CUSTOM: Increment by 1 because of custom gbuffer
     #if OUTPUT_SHADOWMASK
-    output.GBuffer4 = inputData.shadowMask; // will have unity_ProbesOcclusion value if subtractive lighting is used (baked)
+    output.GBuffer5 = inputData.shadowMask; // will have unity_ProbesOcclusion value if subtractive lighting is used (baked) // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
 
     return output;
 }
 
 // This decodes the Gbuffer into a SurfaceData struct
-SurfaceData SurfaceDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2, int lightingMode)
+SurfaceData SurfaceDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2, half4 gbuffer3, int lightingMode) // CUSTOM: Add custom gbuffer #0 here (gbuffer3)
 {
     SurfaceData surfaceData;
 
@@ -154,6 +156,8 @@ SurfaceData SurfaceDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer
 
     surfaceData.emission = (half3)0; // Note: this is not made available at lighting pass in this renderer - emission contribution is included (with GI) in the value GBuffer3.rgb, that is used as a renderTarget during lighting
     surfaceData.normalTS = (half3)0; // Note: does this normalTS member need to be in SurfaceData? It looks like an intermediate value
+    
+    surfaceData.custom0 = gbuffer3.rgba; // CUSTOM: Data that goes into the extra gbuffer. You can also split this up into separate fields.
 
     return surfaceData;
 }
@@ -196,22 +200,25 @@ FragmentOutput BRDFDataToGbuffer(BRDFData brdfData, InputData inputData, half sm
     output.GBuffer0 = half4(brdfData.albedo.rgb, PackMaterialFlags(materialFlags));  // diffuse           diffuse         diffuse         materialFlags   (sRGB rendertarget)
     output.GBuffer1 = half4(packedSpecular, occlusion);                              // metallic/specular specular        specular        occlusion
     output.GBuffer2 = half4(packedNormalWS, packedSmoothness);                       // encoded-normal    encoded-normal  encoded-normal  smoothness
-    output.GBuffer3 = half4(globalIllumination, 1);                                  // GI                GI              GI              [optional: see OutputAlpha()] (lighting buffer)
+    output.GBuffer3 = brdfData.custom0; // CUSTOM: Custom gbuffer #0
+    output.GBuffer4 = half4(globalIllumination, 1);                                  // GI                GI              GI              [optional: see OutputAlpha()] (lighting buffer) // CUSTOM: Increment by 1 because of custom gbuffer
     #if OUTPUT_SHADOWMASK
-    output.GBuffer4 = inputData.shadowMask; // will have unity_ProbesOcclusion value if subtractive lighting is used (baked)
+    output.GBuffer5 = inputData.shadowMask; // will have unity_ProbesOcclusion value if subtractive lighting is used (baked) // CUSTOM: Increment by 1 because of custom gbuffer
     #endif
 
     return output;
 }
 
 // This decodes the Gbuffer into a SurfaceData struct
-BRDFData BRDFDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2)
+BRDFData BRDFDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2, half4 gbuffer3)  // CUSTOM: Add custom gbuffer #0 here (gbuffer3)
 {
     half3 albedo = gbuffer0.rgb;
     half3 specular = gbuffer1.rgb;
     uint materialFlags = UnpackMaterialFlags(gbuffer0.a);
 
     half smoothness = UnpackSmoothness(gbuffer2.a, kLightingLit);
+    
+    half4 custom0 = gbuffer3; // CUSTOM: Data that goes into the extra gbuffer. You can also split this up into separate fields.
 
     BRDFData brdfData = (BRDFData)0;
     half alpha = 1.0; // NOTE: alpha can get modfied, forward writes it out (_ALPHAPREMULTIPLY_ON).
@@ -238,7 +245,7 @@ BRDFData BRDFDataFromGbuffer(half4 gbuffer0, half4 gbuffer1, half4 gbuffer2)
         brdfDiffuse = albedo * oneMinusReflectivity;
         brdfSpecular = lerp(kDieletricSpec.rgb, albedo, metallic);
     }
-    InitializeBRDFDataDirect(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, alpha, brdfData);
+    InitializeBRDFDataDirect(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, alpha, custom0, brdfData);  // CUSTOM: Pass along custom gbuffer #0 here
 
     return brdfData;
 }

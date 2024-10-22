@@ -404,6 +404,8 @@ void SplatmapFragment(
     half metallic = SAMPLE_TEXTURE2D(_MetallicTex, sampler_MetallicTex, IN.uvMainAndLM.xy).r;
     half alpha = 1;
     half occlusion = 1;
+    
+    half4 custom0 = 0; // CUSTOM: Custom gbuffer #0 needs to be initialized with something
 #else
 
     half4 hasMask = half4(_LayerHasMask0, _LayerHasMask1, _LayerHasMask2, _LayerHasMask3);
@@ -441,6 +443,8 @@ void SplatmapFragment(
     half4 maskOcclusion = half4(masks[0].g, masks[1].g, masks[2].g, masks[3].g);
     defaultOcclusion = lerp(defaultOcclusion, maskOcclusion, hasMask);
     half occlusion = dot(splatControl, defaultOcclusion);
+    
+    half4 custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 #endif
 
     InputData inputData;
@@ -463,7 +467,7 @@ void SplatmapFragment(
 #ifdef TERRAIN_GBUFFER
 
     BRDFData brdfData;
-    InitializeBRDFData(albedo, metallic, /* specular */ half3(0.0h, 0.0h, 0.0h), smoothness, alpha, brdfData);
+    InitializeBRDFData(albedo, metallic, /* specular */ half3(0.0h, 0.0h, 0.0h), smoothness, alpha, custom0, brdfData); // CUSTOM: Passing along custom gbuffer #0
 
     // Baked lighting.
     half4 color;

@@ -394,6 +394,8 @@ half4 SpeedTree8Frag(SpeedTreeFragmentInput input) : SV_Target
     half smoothness = 0;
     half occlusion = 0;
     half3 specular = 0;
+    
+    half4 custom0 = 0;  // CUSTOM: Custom gbuffer #0 needs to be initialized to something
 
     // hue variation
     #ifdef EFFECT_HUE_VARIATION
@@ -464,7 +466,7 @@ half4 SpeedTree8Frag(SpeedTreeFragmentInput input) : SV_Target
     // in LitForwardPass GlobalIllumination (and temporarily LightingPhysicallyBased) are called inside UniversalFragmentPBR
     // in Deferred rendering we store the sum of these values (and of emission as well) in the GBuffer
     BRDFData brdfData;
-    InitializeBRDFData(albedo, metallic, specular, smoothness, alpha, brdfData);
+    InitializeBRDFData(albedo, metallic, specular, smoothness, alpha, custom0, brdfData); // CUSTOM: Pass along custom gbuffer #0
 
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, inputData.shadowMask);
     half3 color = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.positionWS, inputData.normalWS, inputData.viewDirectionWS);
@@ -484,6 +486,8 @@ half4 SpeedTree8Frag(SpeedTreeFragmentInput input) : SV_Target
     surfaceData.alpha = alpha;
     surfaceData.clearCoatMask = 0;
     surfaceData.clearCoatSmoothness = 1;
+    
+    surfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 
 #if defined(DEBUG_DISPLAY)
     inputData.uv = uv;

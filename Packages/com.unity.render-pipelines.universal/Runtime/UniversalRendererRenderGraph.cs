@@ -158,11 +158,22 @@ namespace UnityEngine.Rendering.Universal
         /// <summary>
         /// Screen Space Ambient Occlusion texture. Written to by the SSAO pass.
         /// </summary>
-        SSAOTexture
+        SSAOTexture,
+        
+        // CUSTOM: TODO: I'm actually not sure whether it belongs here or below Gbuffer6. It would change the values of all the enums below it. Then again, I'm not sure where this is used. I can't find it being used at all...
+        /// <summary>
+        /// GBuffer7. Written to by the GBuffer pass. This is custom. Built-in only goes to 6.
+        /// </summary>
+        GBuffer7,
     }
 
     public sealed partial class UniversalRenderer
     {
+        // CUSTOM: Some constants to help make code respect custom gbuffers in one centralized place
+        public const int BuiltinGbufferCount = 4;
+        public const int CustomGbufferCount = 1;
+        public const int TotalGbufferCount = BuiltinGbufferCount + CustomGbufferCount;
+        
         // TODO RENDERGRAPH: Once all cameras will run in a single RenderGraph we should remove all RTHandles and use per frame RG textures.
         // We use 2 camera color handles so we can handle the edge case when a pass might want to read and write the same target.
         // This is not allowed so we just swap the current target, this keeps camera stacking working and avoids an extra blit pass.
@@ -1825,7 +1836,7 @@ namespace UnityEngine.Rendering.Universal
     {
         static private ProfilingSampler s_SetGlobalTextureProfilingSampler = new ProfilingSampler("Set Global Texture");
 
-        internal const int GBufferSize = 7;
+        internal const int GBufferSize = 7 + UniversalRenderer.CustomGbufferCount; // CUSTOM: Made this respect custom Gbuffer count
         internal const int DBufferSize = 3;
         internal const int LightTextureSize = 4;
 

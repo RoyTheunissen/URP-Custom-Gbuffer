@@ -21,6 +21,7 @@ SurfaceData SurfaceDescriptionToSurfaceData(SurfaceDescription surfaceDescriptio
     surface.clearCoatMask       = 0;
     surface.clearCoatSmoothness = 1;
     surface.emission            = surfaceDescription.Emission;
+    surfaceData.custom0         = surfaceDescription.Custom0; // CUSTOM: Pass along custom gbuffer #0
     return surface;
 }
 

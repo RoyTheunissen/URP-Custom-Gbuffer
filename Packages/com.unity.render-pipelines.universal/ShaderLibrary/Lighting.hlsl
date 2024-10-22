@@ -347,12 +347,21 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
     lightingData.vertexLightingColor += inputData.vertexLighting * brdfData.diffuse;
     #endif
 
+    half4 finalColor; // CUSTOM: Write the final color to a variable first so we can mess with it.
 #if REAL_IS_HALF
     // Clamp any half.inf+ to HALF_MAX
-    return min(CalculateFinalColor(lightingData, surfaceData.alpha), HALF_MAX);
+    finalColor = min(CalculateFinalColor(lightingData, surfaceData.alpha), HALF_MAX); // CUSTOM: Write the final color to a variable first so we can mess with it.
 #else
-    return CalculateFinalColor(lightingData, surfaceData.alpha);
+    finalColor = CalculateFinalColor(lightingData, surfaceData.alpha); // CUSTOM: Write the final color to a variable first so we can mess with it.
 #endif
+
+    // CUSTOM: INTEGRATE CUSTOM GBUFFER #0 (Forward)
+    // CUSTOM: Just to prove that it's working: use custom data #0's R to invert the final colour.
+    // This is for forward lighting. The deferred lighting version is in the DeferredShading function in StencilDeferred.hlsl
+    finalColor.rgb = lerp(finalColor.rgb, 1 - finalColor.rgb, surfaceData.custom0.r);
+    
+    // CUSTOM: Now return the final color after we've messed with it
+    return finalColor;
 }
 
 // Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
@@ -371,6 +380,8 @@ half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, hal
     surfaceData.alpha = alpha;
     surfaceData.clearCoatMask = 0;
     surfaceData.clearCoatSmoothness = 1;
+    
+    surfaceData.custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 
     return UniversalFragmentPBR(inputData, surfaceData);
 }

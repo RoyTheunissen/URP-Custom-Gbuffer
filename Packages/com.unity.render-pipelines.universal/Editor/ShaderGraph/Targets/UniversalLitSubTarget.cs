@@ -151,6 +151,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             context.AddBlock(BlockFields.SurfaceDescription.NormalWS, normalDropOffSpace == NormalDropOffSpace.World);
             context.AddBlock(BlockFields.SurfaceDescription.Emission);
             context.AddBlock(BlockFields.SurfaceDescription.Occlusion);
+            context.AddBlock(BlockFields.SurfaceDescription.Custom0); // CUSTOM: Added custom gbuffer #0
 
             // when the surface options are material controlled, we must show all of these blocks
             // when target controlled, we can cull the unnecessary blocks
@@ -715,6 +716,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                 BlockFields.SurfaceDescription.Occlusion,
                 BlockFields.SurfaceDescription.Alpha,
                 BlockFields.SurfaceDescription.AlphaClipThreshold,
+                BlockFields.SurfaceDescription.Custom0, // CUSTOM: Added custom gbuffer #0 here
             };
 
             public static readonly BlockFieldDescriptor[] FragmentComplexLit = new BlockFieldDescriptor[]
@@ -732,6 +734,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                 BlockFields.SurfaceDescription.AlphaClipThreshold,
                 BlockFields.SurfaceDescription.CoatMask,
                 BlockFields.SurfaceDescription.CoatSmoothness,
+                BlockFields.SurfaceDescription.Custom0, // CUSTOM: Added custom gbuffer #0 here
             };
 
             public static readonly BlockFieldDescriptor[] FragmentMeta = new BlockFieldDescriptor[]

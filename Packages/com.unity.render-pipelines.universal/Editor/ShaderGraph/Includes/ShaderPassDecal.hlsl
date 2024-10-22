@@ -211,7 +211,8 @@ void Frag(PackedVaryings packedInput,
 
 #ifdef _DECAL_LAYERS
 #ifdef _RENDER_PASS_ENABLED
-    uint surfaceRenderingLayer = DecodeMeshRenderingLayer(LOAD_FRAMEBUFFER_X_INPUT(GBUFFER4, positionCS.xy).r);
+    // CUSTOM: Increment by 1 because of custom gbuffer
+    uint surfaceRenderingLayer = DecodeMeshRenderingLayer(LOAD_FRAMEBUFFER_X_INPUT(GBUFFER5, positionCS.xy).r);
 #else
     uint surfaceRenderingLayer = LoadSceneRenderingLayer(positionCS.xy);
 #endif
@@ -339,9 +340,11 @@ void Frag(PackedVaryings packedInput,
 
     SurfaceData surface = (SurfaceData)0;
     GetSurface(surfaceData, surface);
+    
+    half4 custom0 = 0; // CUSTOM: Custom gbuffer needs to be initialized to something
 
     BRDFData brdfData;
-    InitializeBRDFData(surface.albedo, surface.metallic, 0, surface.smoothness, surface.alpha, brdfData);
+    InitializeBRDFData(surface.albedo, surface.metallic, 0, surface.smoothness, surface.alpha, custom0, brdfData);  // CUSTOM: Pass along custom gbuffer #0
 
     // Skip GI if there is no abledo
 #ifdef _MATERIAL_AFFECTS_ALBEDO
@@ -358,9 +361,13 @@ void Frag(PackedVaryings packedInput,
     fragmentOutput.GBuffer0 = half4(surfaceData.baseColor.rgb, surfaceData.baseColor.a);
     fragmentOutput.GBuffer1 = 0;
     fragmentOutput.GBuffer2 = half4(packedNormalWS, surfaceData.normalWS.a);
-    fragmentOutput.GBuffer3 = half4(surfaceData.emissive + color, surfaceData.baseColor.a);
+    // CUSTOM: Custom gbuffer #0
+    fragmentOutput.GBuffer3 = 0;
+    // CUSTOM: Increment by 1 because of custom gbuffer
+    fragmentOutput.GBuffer4 = half4(surfaceData.emissive + color, surfaceData.baseColor.a);
 #if OUTPUT_SHADOWMASK
-    fragmentOutput.GBuffer4 = inputData.shadowMask; // will have unity_ProbesOcclusion value if subtractive lighting is used (baked)
+    // CUSTOM: Increment by 1 because of custom gbuffer
+    fragmentOutput.GBuffer5 = inputData.shadowMask; // will have unity_ProbesOcclusion value if subtractive lighting is used (baked)
 #endif
     #pragma warning (default : 3578) // Restore output value isn't completely initialized.
 
