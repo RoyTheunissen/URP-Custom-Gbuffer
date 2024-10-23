@@ -4,6 +4,8 @@
 
 _For people who have need of an extra gbuffer but don't want to write their own SRP from scratch_
 
+[Unity Discussions post](https://discussions.unity.com/t/adding-a-gbuffer-to-urp-example-project/1541024)
+
 ## About the Project
 
 Do you intend to do a sophisticated lighting effect and need an extra field in the Surface Data? Well, for that to work in the Deferred Rendering path, that extra field then needs to be written to a [Gbuffer](https://en.wikipedia.org/wiki/Deferred_shading), but all the [existing ones](https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@13.1/manual/rendering/deferred-rendering-path.html) are basically full already, so you'd need to add your own.
